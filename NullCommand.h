@@ -1,19 +1,11 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
-
-#ifndef ZOORK_NULLCOMMAND_H
-#define ZOORK_NULLCOMMAND_H
+#pragma once
 
 #include "Command.h"
 #include <iostream>
 
 class NullCommand : public Command {
 public:
-    NullCommand() : Command(nullptr) {}
-
-    void execute() override;
+    void execute() override {
+        std::cout << "There is nothing to do here." << std::endl;
+    }
 };
-
-
-#endif //ZOORK_NULLCOMMAND_H

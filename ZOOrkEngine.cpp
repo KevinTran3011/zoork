@@ -1,109 +1,108 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
+#include "ZoorkEngine.h"
+#include "Item.h"
+#include "Enemy.h"
+#include "Boss.h"
+#include "GodslayerBlade.h"
+#include <iostream>
 
-#include "ZOOrkEngine.h"
-
-#include <utility>
-
-ZOOrkEngine::ZOOrkEngine(std::shared_ptr<Room> start) {
-    player = Player::instance();
-    player->setCurrentRoom(start.get());
-    player->getCurrentRoom()->enter();
+ZoorkEngine::ZoorkEngine()
+    : playerProxy(new PlayerProxy(&player)) {
+    createRooms();
+    placeItems();
+    placeEnemies();
+    connectRooms();
 }
 
-void ZOOrkEngine::run() {
-    while (!gameOver) {
-        std::cout << "> ";
+void ZoorkEngine::createRooms() {
+    entrance = std::make_shared<Room>("Entrance", "The entrance of the dungeon.");
+    mainHallway = std::make_shared<Room>("Main Hallway", "A grand hallway with passages in all directions.");
+    enemyRoom1 = std::make_shared<Room>("Enemy Room 1", "A room filled with enemies.");
+    enemyRoom2 = std::make_shared<Room>("Enemy Room 2", "Another room filled with enemies.");
+    library = std::make_shared<Room>("Library", "A room filled with ancient books.");
+    cathedral = std::make_shared<Room>("Cathedral", "A grand cathedral.");
+    throneRoom = std::make_shared<Room>("Throne Room", "The final room where the boss awaits.");
+    arsenal = std::make_shared<Room>("Arsenal", "A room filled with weapons.");
+    enemyRoom3 = std::make_shared<Room>("Enemy Room 3", "A room filled with enemies.");
+    dungeon = std::make_shared<Room>("Dungeon", "A dark and damp dungeon.");
+    hiddenBossRoom = std::make_shared<HiddenBossRoom>("Hidden Boss Room", "A secret room where a powerful boss resides.");
+    hiddenBossRoom->setPlayerProxy(playerProxy);
+}
 
-        std::string input;
-        std::getline(std::cin, input);
+void ZoorkEngine::placeItems() {
+    entrance->addItem(std::make_shared<Item>("Sword", "A basic sword."));
+    arsenal->addItem(std::make_shared<Item>("Shield", "A sturdy shield."));
+}
 
-        std::vector<std::string> words = tokenizeString(input);
-        std::string command = words[0];
-        std::vector<std::string> arguments(words.begin() + 1, words.end());
+void ZoorkEngine::placeEnemies() {
+    enemyRoom1->addEnemy(std::make_shared<Enemy>("Goblin", "A small green goblin.", 20, 5));
+    enemyRoom2->addEnemy(std::make_shared<Enemy>("Orc", "A large and strong orc.", 40, 10));
+    enemyRoom3->addEnemy(std::make_shared<Enemy>("Skeleton", "A reanimated skeleton.", 30, 7));
+    hiddenBossRoom->addEnemy(std::make_shared<Boss>("Hidden Boss", "A powerful and mysterious figure.", 100, 20));
+}
 
-        if (command == "go") {
-            handleGoCommand(arguments);
-        } else if ((command == "look") || (command == "inspect")) {
-            handleLookCommand(arguments);
-        } else if ((command == "take") || (command == "get")) {
-            handleTakeCommand(arguments);
-        } else if (command == "drop") {
-            handleDropCommand(arguments);
-        } else if (command == "quit") {
-            handleQuitCommand(arguments);
-        } else {
-            std::cout << "I don't understand that command.\n";
+void ZoorkEngine::connectRooms() {
+    entrance->addPassage("forward", std::make_shared<Passage>(mainHallway));
+    mainHallway->addPassage("left", std::make_shared<Passage>(enemyRoom1));
+    mainHallway->addPassage("right", std::make_shared<Passage>(arsenal));
+    mainHallway->addPassage("forward", std::make_shared<Passage>(enemyRoom2));
+    enemyRoom2->addPassage("forward", std::make_shared<Passage>(dungeon));
+    dungeon->addPassage("down", std::make_shared<Passage>(hiddenBossRoom));
+    dungeon->addPassage("left", std::make_shared<Passage>(enemyRoom3));
+    enemyRoom3->addPassage("forward", std::make_shared<Passage>(mainHallway)); // To create a loop if teleported back
+}
+
+void ZoorkEngine::play() {
+    std::string command;
+    player.setCurrentRoom(entrance.get());
+
+    while (true) {
+        player.getCurrentRoom()->enter();
+        std::cout << "What would you like to do?" << std::endl;
+        std::getline(std::cin, command);
+
+        if (command == "quit") {
+            break;
         }
+
+        handleAdditionalCommands(command);
     }
 }
 
-void ZOOrkEngine::handleGoCommand(std::vector<std::string> arguments) {
-    std::string direction;
-    if (arguments[0] == "n" || arguments[0] == "north") {
-        direction = "north";
-    } else if (arguments[0] == "s" || arguments[0] == "south") {
-        direction = "south";
-    } else if (arguments[0] == "e" || arguments[0] == "east") {
-        direction = "east";
-    } else if (arguments[0] == "w" || arguments[0] == "west") {
-        direction = "west";
-    } else if (arguments[0] == "u" || arguments[0] == "up") {
-        direction = "up";
-    } else if (arguments[0] == "d" || arguments[0] == "down") {
-        direction = "down";
+void ZoorkEngine::handleAdditionalCommands(const std::string& command) {
+    if (command == "attack") {
+        auto currentRoom = player.getCurrentRoom();
+        if (!currentRoom->getEnemies().empty()) {
+            player.attackEnemy(currentRoom->getEnemies().front().get());
+        } else {
+            std::cout << "There are no enemies here to attack." << std::endl;
+        }
+    } else if (command == "look") {
+        player.getCurrentRoom()->enter();
+    } else if (command.find("go ") == 0) {
+        std::string direction = command.substr(3);
+        movePlayer(direction);
+    } else if (command.find("take ") == 0) {
+        std::string itemName = command.substr(5);
+        auto currentRoom = player.getCurrentRoom();
+        if (currentRoom->hasItem(itemName)) {
+            player.addItem(currentRoom->takeItem(itemName));
+            std::cout << "You take the " << itemName << "." << std::endl;
+        } else {
+            std::cout << "There is no " << itemName << " here." << std::endl;
+        }
+    } else if (command.find("use ") == 0) {
+        std::string itemName = command.substr(4);
+        player.useItem(itemName);
     } else {
-        direction = arguments[0];
+        std::cout << "I don't understand that command." << std::endl;
     }
+}
 
-    Room* currentRoom = player->getCurrentRoom();
+void ZoorkEngine::movePlayer(const std::string& direction) {
+    auto currentRoom = player.getCurrentRoom();
     auto passage = currentRoom->getPassage(direction);
-    player->setCurrentRoom(passage->getTo());
     passage->enter();
-}
-
-void ZOOrkEngine::handleLookCommand(std::vector<std::string> arguments) {
-    // To be implemented
-    std::cout << "This functionality is not yet enabled.\n";
-}
-
-void ZOOrkEngine::handleTakeCommand(std::vector<std::string> arguments) {
-    // To be implemented
-    std::cout << "This functionality is not yet enabled.\n";
-}
-
-void ZOOrkEngine::handleDropCommand(std::vector<std::string> arguments) {
-    // To be implemented
-    std::cout << "This functionality is not yet enabled.\n";
-}
-
-void ZOOrkEngine::handleQuitCommand(std::vector<std::string> arguments) {
-    std::string input;
-    std::cout << "Are you sure you want to QUIT?\n> ";
-    std::cin >> input;
-    std::string quitStr = makeLowercase(input);
-
-    if (quitStr == "y" || quitStr == "yes") {
-        gameOver = true;
+    if (passage->getDestination()) {
+        player.setCurrentRoom(passage->getDestination().get());
     }
-}
-
-std::vector<std::string> ZOOrkEngine::tokenizeString(const std::string &input) {
-    std::vector<std::string> tokens;
-    std::stringstream ss(input);
-    std::string token;
-
-    while (std::getline(ss, token, ' ')) {
-        tokens.push_back(makeLowercase(token));
-    }
-
-    return tokens;
-}
-
-std::string ZOOrkEngine::makeLowercase(std::string input) {
-    std::string output = std::move(input);
-    std::transform(output.begin(), output.end(), output.begin(), ::tolower);
-
-    return output;
 }

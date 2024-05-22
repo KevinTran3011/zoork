@@ -1,36 +1,17 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
+#pragma once
 
-#ifndef ZOORK_PASSAGE_H
-#define ZOORK_PASSAGE_H
-
-#include "NullRoom.h"
 #include "Room.h"
-#include <iostream>
+#include "Command.h"
 
-class Passage : public Location {
+class Passage {
 public:
-    static void
-    createBasicPassage(Room*, Room*, const std::string &, bool);
+    Passage(const std::shared_ptr<Room>& destination);
 
-    Passage(const std::string &, const std::string &, Room*, Room*);
+    void enter();
+    void setCommand(const std::shared_ptr<Command>& command);
+    std::shared_ptr<Room> getDestination() const;
 
-    Passage(const std::string &, const std::string &, std::shared_ptr<Command>, Room*, Room*);
-
-    void setFrom(Room*);
-
-    Room* getFrom() const;
-
-    void setTo(Room*);
-
-    Room* getTo() const;
-
-protected:
-    static std::string oppositeDirection(const std::string &);
-
-    Room* fromRoom;
-    Room* toRoom;
+private:
+    std::shared_ptr<Room> destination;
+    std::shared_ptr<Command> command;
 };
-
-#endif //ZOORK_PASSAGE_H

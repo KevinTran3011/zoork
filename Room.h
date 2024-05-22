@@ -1,43 +1,28 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
+#pragma once
 
-#ifndef ZOORK_ROOM_H
-#define ZOORK_ROOM_H
-
-#include "Character.h"
-#include "RoomDefaultEnterCommand.h"
-#include "Item.h"
-#include "Location.h"
+#include <string>
+#include <vector>
 #include <map>
+#include <memory>
+#include "Enemy.h"
+#include "Item.h"
+#include "Passage.h"
 
-class Passage;
-
-class Room : public Location {
+class Room {
 public:
-    Room(const std::string &, const std::string &);
+    Room(const std::string& name, const std::string& description);
 
-    Room(const std::string &, const std::string &, std::shared_ptr<Command>);
-
-//    void addItem(Item*);
-//    void removeItem(const std::string&);
-//    Item* getItem(const std::string&);
-//    Item* retrieveItem(const std::string&);
-//    void addCharacter(Character*);
-//    void removeCharacter(const std::string&);
-//    Character* getCharacter(const std::string&);
-
-    void addPassage(const std::string &, std::shared_ptr<Passage>);
-
-    void removePassage(const std::string &);
-
-    std::shared_ptr<Passage> getPassage(const std::string &);
+    void addEnemy(const std::shared_ptr<Enemy>& enemy);
+    void addItem(const std::shared_ptr<Item>& item);
+    void addPassage(const std::string& direction, const std::shared_ptr<Passage>& passage);
+    void enter() const;
+    std::string getName() const;
+    std::shared_ptr<Passage> getPassage(const std::string& direction);
 
 protected:
-//    std::vector<Item*> items;
-//    std::vector<Character*> characters;
-    std::map<std::string, std::shared_ptr<Passage>> passageMap;
+    std::string name;
+    std::string description;
+    std::vector<std::shared_ptr<Enemy>> enemies;
+    std::vector<std::shared_ptr<Item>> items;
+    std::map<std::string, std::shared_ptr<Passage>> passages;
 };
-
-
-#endif //ZOORK_ROOM_H

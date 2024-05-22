@@ -1,7 +1,6 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
-
 #include "NullPassage.h"
+#include "NullCommand.h"
 
-NullPassage::NullPassage(Room* from) : Passage("null", "Time is a flat circle.", from, from) {}
+NullPassage::NullPassage() : Passage(nullptr) {
+    setCommand(std::make_shared<NullCommand>());
+}

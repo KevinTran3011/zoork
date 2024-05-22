@@ -1,42 +1,37 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
+#pragma once
 
-#ifndef ZOORK_ZOORKENGINE_H
-#define ZOORK_ZOORKENGINE_H
-
-#include "Player.h"
-#include "Location.h"
-#include "Passage.h"
-#include <iostream>
-#include <sstream>
+#include <memory>
 #include <string>
-#include <vector>
+#include "Room.h"
+#include "Player.h"
+#include "HiddenBossRoom.h"
 
-class ZOOrkEngine {
+class ZoorkEngine {
 public:
-    ZOOrkEngine(std::shared_ptr<Room>);
+    ZoorkEngine();
 
-    void run();
+    void play();
 
 private:
-    bool gameOver = false;
-    Player *player;
+    void createRooms();
+    void placeItems();
+    void placeEnemies();
+    void connectRooms();
+    void handleAdditionalCommands(const std::string& command);
+    void movePlayer(const std::string& direction);
 
-    void handleGoCommand(std::vector<std::string>);
+    Player player;
+    PlayerProxy* playerProxy;
 
-    void handleLookCommand(std::vector<std::string>);
-
-    void handleTakeCommand(std::vector<std::string>);
-
-    void handleDropCommand(std::vector<std::string>);
-
-    void handleQuitCommand(std::vector<std::string>);
-
-    static std::vector<std::string> tokenizeString(const std::string&);
-
-    static std::string makeLowercase(std::string);
+    std::shared_ptr<Room> entrance;
+    std::shared_ptr<Room> mainHallway;
+    std::shared_ptr<Room> enemyRoom1;
+    std::shared_ptr<Room> enemyRoom2;
+    std::shared_ptr<Room> library;
+    std::shared_ptr<Room> cathedral;
+    std::shared_ptr<Room> throneRoom;
+    std::shared_ptr<Room> arsenal;
+    std::shared_ptr<Room> enemyRoom3;
+    std::shared_ptr<Room> dungeon;
+    std::shared_ptr<HiddenBossRoom> hiddenBossRoom;
 };
-
-
-#endif //ZOORK_ZOORKENGINE_H

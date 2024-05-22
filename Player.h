@@ -1,38 +1,39 @@
-//
-// Created by Richard Skarbez on 5/7/23.
-//
+#ifndef PLAYER_H
+#define PLAYER_H
 
-#ifndef ZOORK_PLAYER_H
-#define ZOORK_PLAYER_H
+#include <string>
+#include <vector>
+#include "Item.h"
+#include "Room.h"
+#include "PlayerObserver.h"
 
-#include "Character.h"
-#include "Location.h"
-#include "NullRoom.h"
+class Enemy; // Forward declaration
 
-class Player : public Character {
+class Player {
 public:
-    static Player *instance() {
-        // Note: lazy instantiation of the singleton Player object
-        if (!playerInstance) {
-            playerInstance = new Player();
-        }
-        return Player::playerInstance;
-    }
-
-    void setCurrentRoom(Room*);
-
+    Player(const std::string& name);
+    const std::string& getName() const;
+    int getHealth() const;
+    int getLevel() const;
+    void addObserver(PlayerObserver* observer);
+    void removeObserver(PlayerObserver* observer);
+    void addItem(Item* item);
+    void useItem(Item* item);
+    void attackEnemy(Enemy* enemy);
+    void setCurrentRoom(Room* room);
     Room* getCurrentRoom() const;
-
-    Player(const Player &) = delete;
-
-    Player &operator=(const Player &) = delete;
+    void gainXP(int amount);
+    void takeDamage(int amount);
 
 private:
-    static Player *playerInstance;
+    void notifyObservers();
+    std::string name;
+    int health;
+    int level;
+    int xp;
+    std::vector<Item*> inventory;
     Room* currentRoom;
-
-    Player() : Character("You", "You are a person, alike in dignity to any other, but uniquely you."),
-               currentRoom(new NullRoom()) {}
+    std::vector<PlayerObserver*> observers;
 };
 
-#endif //ZOORK_PLAYER_H
+#endif // PLAYER_H
